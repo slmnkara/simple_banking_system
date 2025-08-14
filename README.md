@@ -1,1 +1,1 @@
-# simple_bank_system
+# Simple Banking System written in C++ by Suleyman Kara
