@@ -1,29 +1,69 @@
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
-class Account {
-protected:
-	int accountID = 0;
-	std::string name;
-	double balance = 0.0;
-};
+using namespace std;
 
-class BankAccount : public Account {
+string getTime() {
+	auto now = chrono::system_clock::now();
+	time_t t = chrono::system_clock::to_time_t(now);
+
+	ostringstream oss;
+	oss << put_time(localtime(&t), "%Y-%m-%d %H:%M:%S");
+	return oss.str();
+}
+
+class Logger {
 private:
-	static int accountCounter;
+	Logger() {}
+	string filename = "log.txt";
+
+	void writeToFile(const string& message) {
+		ofstream file(filename, ios::app);
+		if (file.is_open()) {
+			file << message << "\n";
+		}
+	}
 public:
-	BankAccount(std::string name, double balance) {
-		this->accountID = accountCounter;
-		accountCounter++;
-		this->name = name;
-		this->balance = balance;
+	static Logger& getInstance() {
+		static Logger instance;
+		return instance;
 	}
 
-	std::string getName() const {
+	void logTransaction(const string& type, int accountID, double amount, bool status, int receiverID = -1) {
+		ostringstream oss;
+		oss << "time=" << getTime() << " type=" << type;
+		// If transaciton type is transfer
+		if (receiverID != -1) oss << " senderID=" << accountID << " receiverID=" << receiverID;
+		else oss << " accountID=" << accountID;
+		oss << " amount=" << amount
+			<< " status=" << ((status) ? "SUCCESSFUL" : "FAILED");
+		writeToFile(oss.str());
+		cout << oss.str() << endl;
+	}
+};
+
+class BankAccount {
+private:
+	int accountID = 0;
+	string name;
+	double balance = 0.0;
+	static int accountCounter;
+public:
+	BankAccount(string name_input, double balance_input) {
+		this->accountID = accountCounter;
+		this->name = name;
+		this->balance = balance;
+		accountCounter++;
+	}
+
+	string getName() const {
 		return name;
 	}
 
-	void setName(std::string name) {
+	void setName(string name) {
 		this->name = name;
 	}
 
@@ -35,65 +75,47 @@ public:
 		this->balance = balance;
 	}
 
-	int getAccount() const {
+	int getAccountID() const {
 		return accountID;
 	}
 
+	string getAccountInfo() {
+		ostringstream oss;
+		oss << "accountID=" << accountID
+			<< " name=" << name
+			<< " balance=" << balance << "\n";
+		return oss.str();
+	}
+
 	void withdraw(double amount) {
-		if (balance >= amount && amount > 0) {
-			balance -= amount;
-			std::cout << "Transaction successful. Current balance: " << balance << "\n";
+		bool status = false;
+		if (amount <= this->balance && amount > 0) {
+			this->balance -= amount;
+			status = true;
 		}
-		else {
-			std::cout << "Transaction failed. Current balance: " << balance << "\n";
-		}
+		Logger::getInstance().logTransaction("withdraw", accountID, amount, status);
 	}
 
 	void deposit(double amount) {
+		bool status = false;
 		if (amount > 0) {
-			balance += amount;
-			std::cout << "Transaction successful. Current balance: " << balance << "\n";
+			this->balance += amount;
+			status = true;
 		}
-		else {
-			std::cout << "Transaction failed. Current balance: " << balance << "\n";
-		}
-	}
-	
-	void transfer(BankAccount& bankAccount, double amount) {
-		if (this->accountID == bankAccount.accountID) {
-			std::cout << "Transaction failed. Accounts are the same.";
-			return;
-		}
-		if (this->balance >= amount && amount > 0) {
-			this->balance -= amount;
-			bankAccount.balance += amount;
-			std::cout << "Transaction successful.\n";
-			this->displayInfo();
-			bankAccount.displayInfo();
-			// logging
-			transferLog(accountID, bankAccount.accountID, amount);
-		}
-		else {
-			std::cout << "Transaction failed.\n";
-			this->displayInfo();
-			bankAccount.displayInfo();
-		}
+		Logger::getInstance().logTransaction("deposit", accountID, amount, status);
 	}
 
-	void transferLog(int id1, int id2, double amount) {
-		std::fstream file("log.txt", std::ios::app);
-		if (!file) {
-			std::cerr << "File could not opened!\n";
-			return;
+	void transfer(BankAccount& receiver, double amount) {
+		auto* sender = this;
+		bool status = false;
+		if (sender->accountID != receiver.accountID) {
+			if (amount <= sender->balance && amount > 0) {
+				sender->balance -= amount;
+				receiver.balance += amount;
+				status = true;
+			}
 		}
-		if (file.is_open()) {
-			file << "Transfer info >>   ID: " << id1 << "   to   ID: " << id2 << "   Amount: " << amount << "\n";
-			file.close();
-		}
-	}
-
-	void displayInfo() {
-		std::cout << "ID: " << accountID << ", Name: " << name << ", Balance: " << balance << "\n";
+		Logger::getInstance().logTransaction("transfer", sender->accountID, amount, status, receiver.accountID);
 	}
 };
 
@@ -102,12 +124,10 @@ int BankAccount::accountCounter = 1;
 int main() {
 	BankAccount ba1("Suleyman", 1000);
 	BankAccount ba2("Mehmet", 3000);
-
-	ba1.displayInfo();
-	ba2.displayInfo();
 	ba1.transfer(ba2, 100);
+	ba1.deposit(10000);
+	ba2.withdraw(400);
 	ba2.transfer(ba1, 999);
-	std::cout << "Final balances:\n";
-	ba1.displayInfo();
-	ba2.displayInfo();
+	ba1.transfer(ba1, 200);
+	ba1.transfer(ba2, 100000);
 }

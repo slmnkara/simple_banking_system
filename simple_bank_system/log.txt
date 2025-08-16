@@ -1,1 +1,7 @@
 
+time=2025-08-16 18:16:42 type=transfer senderID=1 receiverID=2 amount=100 status=FAILED
+time=2025-08-16 18:16:42 type=deposit accountID=1 amount=10000 status=SUCCESSFUL
+time=2025-08-16 18:16:42 type=withdraw accountID=2 amount=400 status=FAILED
+time=2025-08-16 18:16:42 type=transfer senderID=2 receiverID=1 amount=999 status=FAILED
+time=2025-08-16 18:16:42 type=transfer senderID=1 receiverID=1 amount=200 status=FAILED
+time=2025-08-16 18:16:42 type=transfer senderID=1 receiverID=2 amount=100000 status=FAILED
