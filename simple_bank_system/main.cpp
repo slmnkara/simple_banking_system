@@ -6,15 +6,6 @@
 
 using namespace std;
 
-string getTime() {
-	auto now = chrono::system_clock::now();
-	time_t t = chrono::system_clock::to_time_t(now);
-
-	ostringstream oss;
-	oss << put_time(localtime(&t), "%Y-%m-%d %H:%M:%S");
-	return oss.str();
-}
-
 class Logger {
 private:
 	Logger() {}
@@ -34,14 +25,23 @@ public:
 
 	void logTransaction(const string& type, int accountID, double amount, bool status, int receiverID = -1) {
 		ostringstream oss;
-		oss << "time=" << getTime() << " type=" << type;
-		// If transaciton type is transfer
-		if (receiverID != -1) oss << " senderID=" << accountID << " receiverID=" << receiverID;
-		else oss << " accountID=" << accountID;
-		oss << " amount=" << amount
+		oss << "time=" << getTime() 
+			<< " type=" << type
+			<< " accountID=" << accountID
+			<< " amount=" << amount
 			<< " status=" << ((status) ? "SUCCESSFUL" : "FAILED");
+		// If transaciton type is transfer
+		if (receiverID != -1) oss << " receiverID=" << receiverID;
 		writeToFile(oss.str());
-		cout << oss.str() << endl;
+	}
+
+	string getTime() {
+		auto now = chrono::system_clock::now();
+		time_t t = chrono::system_clock::to_time_t(now);
+
+		ostringstream oss;
+		oss << put_time(localtime(&t), "%Y-%m-%d %H:%M:%S");
+		return oss.str();
 	}
 };
 
@@ -52,7 +52,7 @@ private:
 	double balance = 0.0;
 	static int accountCounter;
 public:
-	BankAccount(string name_input, double balance_input) {
+	BankAccount(string name, double balance) {
 		this->accountID = accountCounter;
 		this->name = name;
 		this->balance = balance;
@@ -130,4 +130,11 @@ int main() {
 	ba2.transfer(ba1, 999);
 	ba1.transfer(ba1, 200);
 	ba1.transfer(ba2, 100000);
+
+	cout << ba1.getAccountInfo();
+	cout << ba2.getAccountInfo();
+
+	ba1.setName("Kara");
+	cout << ba1.getAccountInfo();
+	cout << ba2.getAccountInfo();
 }
