@@ -1,8 +1,8 @@
 #include <iostream>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-#include <sstream>
+#include <fstream> // for file op.
+#include <chrono> // for time
+#include <iomanip> // for put_time
+#include <sstream> // for oss
 
 using namespace std;
 
@@ -25,7 +25,7 @@ public:
 
 	void logTransaction(const string& type, int accountID, double amount, bool status, int receiverID = -1) {
 		ostringstream oss;
-		oss << "time=" << getTime() 
+		oss << "time=" << getTime()
 			<< " type=" << type
 			<< " accountID=" << accountID
 			<< " amount=" << amount
@@ -130,10 +130,8 @@ int main() {
 	ba2.transfer(ba1, 999);
 	ba1.transfer(ba1, 200);
 	ba1.transfer(ba2, 100000);
-
 	cout << ba1.getAccountInfo();
 	cout << ba2.getAccountInfo();
-
 	ba1.setName("Kara");
 	cout << ba1.getAccountInfo();
 	cout << ba2.getAccountInfo();
