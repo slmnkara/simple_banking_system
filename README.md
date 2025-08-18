@@ -1,4 +1,4 @@
-# Simple Banking System written in C++ by Suleyman Kara
+# Simple Banking System
 This project is a simple C++ banking system simulation with transaction logging.
 It includes:
 
